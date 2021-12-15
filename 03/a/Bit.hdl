@@ -15,4 +15,8 @@ CHIP Bit {
 
     PARTS:
     // Put your code here:
+    Mux(a = preOut, b = in, sel = load, out = o1);
+
+    // flip-flop：record stat of previous time unit
+    DFF(in = o1, out = preOut, out = out);
 }
