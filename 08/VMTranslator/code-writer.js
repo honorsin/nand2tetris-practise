@@ -47,14 +47,6 @@ function writeArithmetic(command) {
     return output
   }
 }
-
-function writePushPop(command, type, fileName) {
-  const memType = arg1(command, type).toUpperCase()
-  const memVal = arg2(command, type)
-
-  return processSegment(memType, memVal, type, fileName)
-}
-
 function arg1(command, type) {
   if (type == 'arith') {
     return command
@@ -150,7 +142,101 @@ function processSegment(memType, memVal, type, fileName) {
   return output
 }
 
+function writePushPop(command, type, fileName) {
+  const memType = arg1(command, type).toUpperCase()
+  const memVal = arg2(command, type)
+
+  return processSegment(memType, memVal, type, fileName)
+}
+
+function writeLabel(command) {
+  const label = command.split(' ').pop()
+  const output = '(' + label + ')\r\n'
+  return output
+}
+
+function writeGoto(command) {
+  const label = command.split(' ').pop()
+  const output = '@' + label + '\r\n' + '0;JMP\r\n'
+  return output
+}
+
+function writeIf(command) {
+  const label = command.split(' ').pop()
+  const output = ['@SP', 'M = M-1', 'A=M', 'D=M', '@'+label, 'D;JNE'].join('\r\n') + '\r\n'
+  return output
+}
+
+function writeFunction(command, type) {
+  const funcName = arg1(command).toUpperCase()
+  const argNum = arg2(command, type)
+  let output = '(' + funcName + ')\r\n'
+
+  while (argNum--) {
+    output += writePushPop('push constant 0', 'push')
+  }
+
+  return output
+}
+
+function writeCall(command, type) {
+  const symbolFlag = Date.now();
+  const funcName = arg1(command).toUpperCase()
+  const argNum = arg2(command, type)
+  let output = '@' + funcName + 'RETURN_ADDRESS' + symbolFlag + '\r\n'
+                + ['D=A', 'SP', 'A=M', 'M=D', '@SP', 'M = M+1'].join('\r\n')+'\r\n'
+  
+  // 缓存当前栈帧状态变量
+  const callArray = ['LCL', 'ARG', 'THIS', 'THAT']
+  callArray.forEach(state => {
+    output += ['@'+ state, 'D=M', '@SP', 'A=M', 'M=D','@SP', 'M= M+1'].join('\r\n')+'\r\n'
+  })
+
+  output += ['@'+argNum, 'D=A', '@5', 'D = D+M', '@SP', 'D=M-D', '@ARG', 'M=D', 
+              '@SP', 'D=M', '@LCL', 'M=D', 
+              '@'+funcName, '0;JMP', '@' + funcName + 'RETURN_ADDRESS' + symbolFlag].join('\r\n')+'\r\n'
+
+  
+  return output
+}
+
+function writeReturn(command) {
+
+  let output = ['@LCL', 'D=M', '@R13', 'M=D', '@5', 'A= D-A', 'D=M',
+                    '@R14', 'M=D', '@SP', 'M= M-1', 'A=M', 'D=M', '@ARG', 'M=A', 'M=D',
+                    '@ARG', 'D = M+1', '@SP', 'D=M'].join('/r/n') + '\r\n'
+
+  const replaceState = ''
+  const pointerArry = ['THAT', 'THIS', 'ARG', 'LCL']
+  pointerArry.forEach(symbol=> {
+    restoreStates += '@R13\r\n'
+         + 'D=M-1\r\n'
+         + 'M=D\r\n'
+         + 'A=M\r\n'
+         + 'D=M\r\n'
+         + '@' + symbol + '\r\n'
+         + 'M=D\r\n'
+  })
+
+  output += pointerArry + '@R14\r\n' + 'A=M\r\n' + '0;JMP\r\n'
+
+  return output
+}
+
+function writeInit() {
+  let output = ['@256', 'D=A', '@SP', 'M=D'].join('\r\n') + '\r\n'
+  output += writeCall('call Sys.init 0', 'call')
+  return output
+}
+
 module.exports = {
   writePushPop,
-  writeArithmetic
+  writeArithmetic,
+  writeLabel,
+  writeGoto,
+  writeIf,
+  writeFunction,
+  writeCall,
+  writeReturn,
+  writeInit
 }
