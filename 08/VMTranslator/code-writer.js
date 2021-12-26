@@ -218,7 +218,7 @@ function writeReturn(command) {
          + 'M=D\r\n'
   })
 
-  output += pointerArry + '@R14\r\n' + 'A=M\r\n' + '0;JMP\r\n'
+  output += restoreStates + '@R14\r\n' + 'A=M\r\n' + '0;JMP\r\n'
 
   return output
 }

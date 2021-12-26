@@ -38,10 +38,9 @@ if (isDirectory) {
           let preName = tempArry.join('.')
           let data = fs.readFileSync(`${fileName}/${file}`, 'utf-8')
           processFileData(data, preName)
+          setFileName()    
       } 
     })
-
-    setFileName()    
   })
 }
 else {
