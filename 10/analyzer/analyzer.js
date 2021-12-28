@@ -7,8 +7,10 @@ const isDirectory = fs.lstatSync(fileName).isDirectory()
 
 function processFileData(vmcode, fileName) {
   data = data.split(/\r\n|\n/)
-  const tokens = new JackTokenizer(data, path).getTokens()
-  new CompilationEngine(tokens, path)
+  const jackTokenizer = new JackTokenizer(data, path)
+  jackTokenizer._init()
+  const tokens = jackTokenizer.getTokens()
+  const compliedCode = new CompilationEngine(tokens, path)
 }
 
 function setFileName(outname, vmcode) {
@@ -36,7 +38,6 @@ function compile () {
             let preName = tempArry.join('.')
             let data = fs.readFileSync(`${fileName}/${file}`, 'utf-8')
             processFileData(data, preName)
-            setFileName(filename, vmcode)  
         } 
       })
   
@@ -51,8 +52,6 @@ function compile () {
     // 读取jack文件
     const vmcode = fs.readFileSync(outName, 'utf-8')
     processFileData(vmcode, fileName)
-    // 写入vm文件
-    setFileName(filename, vmcode)
   }
 }
 
