@@ -220,7 +220,7 @@ class CompilationEngine{
     }   
   }
 
-  _compileIf(key, val) {
+  _compileIf() {
     let temp
         
     this.output += '<ifStatement>\r\n'
